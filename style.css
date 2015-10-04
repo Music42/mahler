@@ -1,0 +1,25 @@
+body {
+    font-weight: 900;
+}
+
+.container {
+    width: 700px;
+    padding: 10px;
+}
+
+.game-title,
+.game-start {
+    padding: 50px;
+}
+
+.game-title h1 {
+    font-weight: 900;
+}
+
+#btn-start {
+    font-weight: 900;
+}
+
+#game-board {
+    display: none;
+}
