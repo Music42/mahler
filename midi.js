@@ -49,6 +49,8 @@ function onMIDIMessage(event) {
         checkUserInput(MIDI_NOTES.toArray(), true);
     }
     if (cmd === 'keyup') {
-        MIDI_NOTES.remove(new Note(code, SETTINGS.key));
+        MIDI_NOTES.remove({
+            code: code
+        });
     }
 }
