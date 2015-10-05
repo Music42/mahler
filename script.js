@@ -35,7 +35,7 @@ function compareKeys(correctKeys, pressedKeys, strict) {
 function updateGame() {
     CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
     SETTINGS = getOptions();
-    SHEET_MUSIC.update(getOptions());
+    SHEET_MUSIC.update(SETTINGS);
     SHEET_MUSIC.draw();
     PIANO.update(calcPianoX(), calcPianoY());
     PIANO.draw();
