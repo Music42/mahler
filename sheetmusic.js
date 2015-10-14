@@ -12,15 +12,32 @@ SheetMusic.prototype.update = function(options) {
     this.index = 0;
     this.trebleBars = new Queue();
     this.bassBars = new Queue();
-    var i;
+    this.mode = options.mode;
+    this._generateBars();
+};
+
+SheetMusic.prototype._generateBars = function() {
+    var i, bar;
     if (this.withTreble) {
+        if (this.mode === 'NOTES') {
+            bar = this._generateNotes(4, 'g');
+        }
+        if (this.mode === 'CHORDS') {
+            bar = this._generateChords(4, 'g');
+        }
         for (i = 0; i < 4; i++) {
-            this.trebleBars.enqueue(this.generateNotes(4, 'g'));
+            this.trebleBars.enqueue(bar);
         }
     }
     if (this.withBass) {
+        if (this.mode === 'NOTES') {
+            bar = this._generateNotes(4, 'f');
+        }
+        if (this.mode === 'CHORDS') {
+            bar = this._generateChords(4, 'f');
+        }
         for (i = 0; i < 4; i++) {
-            this.bassBars.enqueue(this.generateNotes(4, 'f'));
+            this.bassBars.enqueue(bar);
         }
     }
 };
@@ -28,10 +45,14 @@ SheetMusic.prototype.update = function(options) {
 SheetMusic.prototype.nextNotes = function() {
     var notes = [];
     if (this.withTreble) {
-        notes.push(this.trebleBars.peek()[this.index]);
+        this.trebleBars.peek()[this.index].toNoteList().forEach(function(n) {
+            notes.push(n);
+        });
     }
     if (this.withBass) {
-        notes.push(this.bassBars.peek()[this.index]);
+        this.bassBars.peek()[this.index].toNoteList().forEach(function(n) {
+            notes.push(n);
+        });
     }
     return notes;
 };
@@ -42,21 +63,29 @@ SheetMusic.prototype.consumeNotes = function() {
         this.index = 0;
         if (this.withTreble) {
             this.trebleBars.dequeue();
-            this.trebleBars.enqueue(this.generateNotes(4, 'g'));
+            this.trebleBars.enqueue(this._generateChords(4, 'g'));
         }
         if (this.withBass) {
             this.bassBars.dequeue();
-            this.bassBars.enqueue(this.generateNotes(4, 'f'));
+            this.bassBars.enqueue(this._generateChords(4, 'f'));
         }
     }
 };
 
-SheetMusic.prototype.generateNotes = function(n, clef) {
+SheetMusic.prototype._generateNotes = function(n, clef) {
     var notes = [];
     for (var i = 0; i < n; ++i) {
         notes.push(randomNote(clef, this.key));
     }
     return notes;
+};
+
+SheetMusic.prototype._generateChords = function(n, clef) {
+    var chords = [];
+    for (var i = 0; i < n; ++i) {
+        chords.push(randomChord(clef, this.key));
+    }
+    return chords;
 };
 
 SheetMusic.prototype.nOfClefs = function() {
@@ -134,6 +163,7 @@ SheetMusic.prototype.draw = function(indicatorColor) {
     ctx.beginPath();
     ctx.clearRect(0, 0, this.ctx.canvas.width, this.height());
 
+    console.log(this.nextNotes());
     this._drawBars(ctx);
     this._drawKeySig(ctx);
     this._drawIndicator(ctx, indicatorColor);

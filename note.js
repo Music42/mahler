@@ -6,6 +6,9 @@ var Note = function(code, key) {
 };
 
 Note.prototype = {
+    toNoteList: function() {
+        return [this];
+    },
     toString: function() {
         return this.name + this.octave;
     },
@@ -25,6 +28,27 @@ Note.prototype = {
         }
         var diff = this.code - note.code;
         return strict ? diff === 0 : diff % 12 === 0;
+    }
+};
+
+var Chord = function(noteList) {
+    this.notes = noteList;
+};
+
+Chord.prototype = {
+    toNoteList: function() {
+        return this.notes;
+    },
+    toVexNote: function() {
+        var vexKeys = [];
+        this.notes.forEach(function(note) {
+            vexKeys.push(note.toVexString());
+        });
+        return new Vex.Flow.StaveNote({
+            clef: this.notes[0].octave < 4 ? 'bass' : 'treble',
+            keys: vexKeys,
+            duration: '4'
+        });
     }
 };
 
@@ -156,4 +180,51 @@ function randomNote(cleff, key) {
     // increase code to proper octave
     code = code % 12 + 12 * (octave + 1);
     return new Note(code, key);
+}
+
+function scaleIndex(note, key) {
+    var keyRootCode = rootNoteCode(key);
+    var diff = (note.code % 12) - keyRootCode;
+    var index = -1;
+    if (diff < 5) {
+        if (diff % 2 === 0) {
+            index = diff / 2;
+        }
+    } else {
+        if ((diff + 1) % 2 === 0) {
+            index = (diff + 1) / 2;
+        }
+    }
+    return index;
+}
+
+function randomChord(clef, key) {
+    var chordRoot = randomNote(clef, key);
+    var rootIndex = scaleIndex(chordRoot, key);
+    var chordNotes = [chordRoot];
+
+    var rn = Math.floor(Math.random() * 3);
+    var chordIndices = [];
+    if (rn === 0) {
+        chordIndices = [rootIndex + 2, rootIndex + 4];
+    } else if (rn === 1) {
+        chordIndices = [rootIndex + 2, rootIndex + 4, rootIndex + 5];
+    } else {
+        chordIndices = [rootIndex + 2, rootIndex + 4, rootIndex + 6];
+    }
+
+    var octave = chordRoot.octave;
+    chordIndices.forEach(function(index) {
+        if (index > 6) {
+            if (octave === 4 || octave === 2) {
+                octave += 1;
+            }
+            index = index % 7;
+        }
+        var code = rootNoteCode(key);
+        code += index < 3 ? index * 2 : index * 2 - 1;
+        code = code % 12 + 12 * (octave + 1);
+        chordNotes.push(new Note(code, key));
+    });
+    return new Chord(chordNotes);
 }

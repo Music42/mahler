@@ -108,6 +108,7 @@ function calcPianoX() {
 function getOptions() {
     var selectedKey = $('#selKey').val();
     var selectedClef = $('#selClef').val();
+    var selectedMode = $('#selMode').val();
     var treble, bass;
     if (selectedClef === 'BOTH') {
         treble = bass = true;
@@ -122,7 +123,8 @@ function getOptions() {
         'ctx': CTX,
         'key': selectedKey,
         'withTreble': treble,
-        'withBass': bass
+        'withBass': bass,
+        'mode': selectedMode
     };
 }
 
