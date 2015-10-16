@@ -19,24 +19,24 @@ SheetMusic.prototype.update = function(options) {
 SheetMusic.prototype._generateBars = function() {
     var i, bar;
     if (this.withTreble) {
-        if (this.mode === 'NOTES') {
-            bar = this._generateNotes(4, 'g');
-        }
-        if (this.mode === 'CHORDS') {
-            bar = this._generateChords(4, 'g');
-        }
         for (i = 0; i < 4; i++) {
+            if (this.mode === 'NOTES') {
+                bar = this._generateNotes(4, 'g');
+            }
+            if (this.mode === 'CHORDS') {
+                bar = this._generateChords(4, 'g');
+            }
             this.trebleBars.enqueue(bar);
         }
     }
     if (this.withBass) {
-        if (this.mode === 'NOTES') {
-            bar = this._generateNotes(4, 'f');
-        }
-        if (this.mode === 'CHORDS') {
-            bar = this._generateChords(4, 'f');
-        }
         for (i = 0; i < 4; i++) {
+            if (this.mode === 'NOTES') {
+                bar = this._generateNotes(4, 'f');
+            }
+            if (this.mode === 'CHORDS') {
+                bar = this._generateChords(4, 'f');
+            }
             this.bassBars.enqueue(bar);
         }
     }
