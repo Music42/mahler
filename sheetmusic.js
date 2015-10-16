@@ -13,31 +13,30 @@ SheetMusic.prototype.update = function(options) {
     this.trebleBars = new Queue();
     this.bassBars = new Queue();
     this.mode = options.mode;
-    this._generateBars();
+    this._initializeBars();
 };
 
-SheetMusic.prototype._generateBars = function() {
-    var i, bar;
+SheetMusic.prototype._createBar = function(cleff) {
+    var bar;
+    if (this.mode === 'NOTES') {
+        bar = this._generateNotes(4, cleff);
+    }
+    if (this.mode === 'CHORDS') {
+        bar = this._generateChords(4, cleff);
+    }
+    return bar;
+};
+
+SheetMusic.prototype._initializeBars = function() {
+    var i;
     if (this.withTreble) {
         for (i = 0; i < 4; i++) {
-            if (this.mode === 'NOTES') {
-                bar = this._generateNotes(4, 'g');
-            }
-            if (this.mode === 'CHORDS') {
-                bar = this._generateChords(4, 'g');
-            }
-            this.trebleBars.enqueue(bar);
+            this.trebleBars.enqueue(this._createBar('g'));
         }
     }
     if (this.withBass) {
         for (i = 0; i < 4; i++) {
-            if (this.mode === 'NOTES') {
-                bar = this._generateNotes(4, 'f');
-            }
-            if (this.mode === 'CHORDS') {
-                bar = this._generateChords(4, 'f');
-            }
-            this.bassBars.enqueue(bar);
+            this.bassBars.enqueue(this._createBar('f'));
         }
     }
 };
@@ -63,11 +62,11 @@ SheetMusic.prototype.consumeNotes = function() {
         this.index = 0;
         if (this.withTreble) {
             this.trebleBars.dequeue();
-            this.trebleBars.enqueue(this._generateChords(4, 'g'));
+            this.trebleBars.enqueue(this._createBar('g'));
         }
         if (this.withBass) {
             this.bassBars.dequeue();
-            this.bassBars.enqueue(this._generateChords(4, 'f'));
+            this.bassBars.enqueue(this._createBar('f'));
         }
     }
 };
