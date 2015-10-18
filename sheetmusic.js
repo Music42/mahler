@@ -53,16 +53,37 @@ SheetMusic.prototype._initializeBars = function() {
 };
 
 SheetMusic.prototype.nextNotes = function() {
-    var notes = [];
+    var notes = [],
+        nextItem;
     if (this.withTreble) {
-        this.trebleBars.peek()[this.index].toNoteList().forEach(function(n) {
-            notes.push(n);
-        });
+        nextItem = this.trebleBars.peek()[this.index];
+        if (nextItem !== undefined) {
+            nextItem.toNoteList().forEach(function(n) {
+                notes.push(n);
+            });
+        }
     }
     if (this.withBass) {
-        this.bassBars.peek()[this.index].toNoteList().forEach(function(n) {
-            notes.push(n);
-        });
+        if (this.mode === 'MELODY') {
+            var duration = Number(this.bassBars.peek()[0].duration);
+            if ((duration === 2 && (this.index === 0 || this.index === 2)) ||
+                (duration === 1 && (this.index === 0))) {
+                var index = Math.max(0, this.index - 1);
+                nextItem = this.bassBars.peek()[index];
+                if (nextItem !== undefined) {
+                    nextItem.toNoteList().forEach(function(n) {
+                        notes.push(n);
+                    });
+                }
+            }
+        } else {
+            nextItem = this.bassBars.peek()[this.index];
+            if (nextItem !== undefined) {
+                nextItem.toNoteList().forEach(function(n) {
+                    notes.push(n);
+                });
+            }
+        }
     }
     return notes;
 };
@@ -76,8 +97,37 @@ SheetMusic.prototype.consumeNotes = function() {
             this.trebleBars.enqueue(this._createBar('g'));
         }
         if (this.withBass) {
-            this.bassBars.dequeue();
-            this.bassBars.enqueue(this._createBar('f'));
+            if (this.mode === 'MELODY') {
+                var duration = Number(this.bassBars.peek()[0].duration);
+                var index = this.index;
+                if ((duration === 2 && (index === 0 || index === 2)) ||
+                    (duration === 1 && (index === 0))) {
+                    this.bassBars.dequeue();
+                    this.bassBars.enqueue(this._createBar('f'));
+                }
+            } else {
+                this.bassBars.dequeue();
+                this.bassBars.enqueue(this._createBar('f'));
+            }
+        }
+    }
+    if (this.mode === 'MELODY') {
+        if (!this.withTreble) {
+            var dur = Number(this.bassBars.peek()[0].duration);
+            if (dur === 1 && this.index !== 0) {
+                this.index = 0;
+                this.bassBars.dequeue();
+                this.bassBars.enqueue(this._createBar('f'));
+            }
+            if (dur === 2) {
+                if (this.index > 2) {
+                    this.index = 0;
+                    this.bassBars.dequeue();
+                    this.bassBars.enqueue(this._createBar('f'));
+                } else if (this.index > 0) {
+                    this.index = 2;
+                }
+            }
         }
     }
 };
