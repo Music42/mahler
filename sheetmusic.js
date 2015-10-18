@@ -1,4 +1,4 @@
-/*global randomNote, accidentals*/
+/*global randomNote, randomChord, Note, Chord, accidentals*/
 
 var SheetMusic = function(options) {
     this.update(options);
@@ -16,13 +16,24 @@ SheetMusic.prototype.update = function(options) {
     this._initializeBars();
 };
 
-SheetMusic.prototype._createBar = function(cleff) {
+SheetMusic.prototype._createBar = function(clef) {
     var bar;
     if (this.mode === 'NOTES') {
-        bar = this._generateNotes(4, cleff);
+        bar = this._generateNotes(4, clef);
     }
     if (this.mode === 'CHORDS') {
-        bar = this._generateChords(4, cleff);
+        bar = this._generateChords(4, clef);
+    }
+    if (this.mode === 'MELODY') {
+        if (clef === 'g') {
+            bar = this._generateNotes(4, clef);
+        }
+        if (clef === 'f') {
+            var howMany = Math.random() < 0.4 ? 2 : 1;
+            var oct = Math.random() < 0.5;
+            var whatType = oct ? this._generateOctaves : this._generateChords;
+            bar = whatType.call(this, howMany, clef, howMany.toString());
+        }
     }
     return bar;
 };
@@ -79,12 +90,30 @@ SheetMusic.prototype._generateNotes = function(n, clef) {
     return notes;
 };
 
-SheetMusic.prototype._generateChords = function(n, clef) {
+SheetMusic.prototype._generateChords = function(n, clef, duration) {
     var chords = [];
     for (var i = 0; i < n; ++i) {
-        chords.push(randomChord(clef, this.key));
+        chords.push(randomChord(clef, this.key, duration));
     }
     return chords;
+};
+
+SheetMusic.prototype._generateOctaves = function(n, clef, duration) {
+    var octaves = [];
+    for (var i = 0; i < n; ++i) {
+        var first = randomNote(clef, this.key);
+        var curCode = first.code,
+            nextCode;
+        if (clef === 'f') {
+            nextCode = curCode + 12 < 58 ? curCode + 12 : curCode - 12;
+        }
+        if (clef === 'g') {
+            nextCode = curCode - 12 > 59 ? curCode - 12 : curCode + 12;
+        }
+        var next = new Note(nextCode, this.key);
+        octaves.push(new Chord([first, next], duration));
+    }
+    return octaves;
 };
 
 SheetMusic.prototype.nOfClefs = function() {
@@ -111,14 +140,16 @@ SheetMusic.prototype._drawBars = function(vexCtx) {
     for (var clefIndex = 0; clefIndex < clefBars.length; ++clefIndex) {
         var i = 0;
         clefBars[clefIndex].forEach(function(bar) {
-            var staveMeasure = new Vex.Flow.Stave(this.keySigWidth() - shift + 200 * i, clefIndex * 125 + 10, 200, {
+            var x = this.keySigWidth() - shift + 200 * i;
+            var y = clefIndex * 125 + 10;
+            var stave = new Vex.Flow.Stave(x, y, 200, {
                 fill_style: 'black'
             });
-            staveMeasure.setContext(vexCtx).draw();
-            var notesMeasure = bar.map(function(item) {
+            stave.setContext(vexCtx).draw();
+            var notes = bar.map(function(item) {
                 return item.toVexNote();
             });
-            Vex.Flow.Formatter.FormatAndDraw(vexCtx, staveMeasure, notesMeasure);
+            Vex.Flow.Formatter.FormatAndDraw(vexCtx, stave, notes);
             ++i;
         }, this);
     }
@@ -134,13 +165,15 @@ SheetMusic.prototype._drawKeySig = function(vexCtx) {
     var clefIndex = 0;
     for (var i = 0; i < cleffs.length; ++i) {
         if (cleffs[i]) {
-            var staveMeasure = new Vex.Flow.Stave(0, clefIndex * 125 + 10, this.keySigWidth(), {
+            var y = clefIndex * 125 + 10;
+            var stave = new Vex.Flow.Stave(0, y, this.keySigWidth(), {
                 fill_style: 'black'
             });
             var cleffName = i === 0 ? 'treble' : 'bass';
-            staveMeasure.addClef(cleffName).addKeySignature(this.key).addTimeSignature('4/4');
+            stave.addClef(cleffName).addKeySignature(this.key);
+            stave.addTimeSignature('4/4');
             vexCtx.save();
-            staveMeasure.setContext(vexCtx).draw();
+            stave.setContext(vexCtx).draw();
             vexCtx.restore();
             ++clefIndex;
         }
@@ -156,7 +189,8 @@ SheetMusic.prototype._drawIndicator = function(vexCtx, color) {
 };
 
 SheetMusic.prototype.draw = function(indicatorColor) {
-    var renderer = new Vex.Flow.Renderer(this.ctx.canvas, Vex.Flow.Renderer.Backends.CANVAS);
+    var vexCANVAS = Vex.Flow.Renderer.Backends.CANVAS;
+    var renderer = new Vex.Flow.Renderer(this.ctx.canvas, vexCANVAS);
     var ctx = renderer.getContext();
 
     ctx.beginPath();

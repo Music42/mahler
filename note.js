@@ -1,4 +1,4 @@
-var Note = function(code, key) {
+var Note = function(code, key, duration) {
     this.code = code;
     this.name = codeToName(code, key);
     this.key = key;
@@ -9,6 +9,7 @@ var Note = function(code, key) {
     if (this.name === 'B#') {
         this.octave -= 1;
     }
+    this.duration = duration || '4';
 };
 
 Note.prototype = {
@@ -25,7 +26,7 @@ Note.prototype = {
         return new Vex.Flow.StaveNote({
             clef: this.octave < 4 ? 'bass' : 'treble',
             keys: [this.toVexString()],
-            duration: '4'
+            duration: this.duration
         });
     },
     equals: function(note, strict) {
@@ -37,8 +38,9 @@ Note.prototype = {
     }
 };
 
-var Chord = function(noteList) {
+var Chord = function(noteList, duration) {
     this.notes = noteList;
+    this.duration = duration || '4';
 };
 
 Chord.prototype = {
@@ -56,7 +58,7 @@ Chord.prototype = {
         return new Vex.Flow.StaveNote({
             clef: maxCode < 60 ? 'bass' : 'treble',
             keys: vexKeys,
-            duration: '4'
+            duration: this.duration
         });
     }
 };
@@ -171,13 +173,13 @@ function nameToCode(noteName, octave) {
     return code;
 }
 
-function randomNote(cleff, key) {
+function randomNote(clef, key) {
     key = key || 'C';
-    cleff = cleff.toUpperCase();
+    clef = clef.toUpperCase();
     // pick a random octave
     var rn = Math.random();
     var octave = 4;
-    if (cleff === 'G') {
+    if (clef === 'G') {
         octave = rn < 0.5 ? 4 : 5;
     } else {
         octave = rn < 0.5 ? 2 : 3;
@@ -207,7 +209,7 @@ function scaleIndex(note, key) {
     return index;
 }
 
-function randomChord(clef, key) {
+function randomChord(clef, key, duration) {
     var chordRoot = randomNote(clef, key);
     var rootIndex = scaleIndex(chordRoot, key);
     var chordNotes = [chordRoot];
@@ -236,5 +238,5 @@ function randomChord(clef, key) {
         }
         chordNotes.push(new Note(code, key));
     });
-    return new Chord(chordNotes);
+    return new Chord(chordNotes, duration);
 }
