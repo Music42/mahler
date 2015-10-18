@@ -162,7 +162,9 @@ SheetMusic.prototype.draw = function(indicatorColor) {
     ctx.beginPath();
     ctx.clearRect(0, 0, this.ctx.canvas.width, this.height());
 
-    console.log(this.nextNotes());
+    console.log(this.nextNotes().map(function(note) {
+        return note.toString() + ' ' + note.code;
+    }));
     this._drawBars(ctx);
     this._drawKeySig(ctx);
     this._drawIndicator(ctx, indicatorColor);
