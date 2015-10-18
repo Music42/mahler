@@ -3,6 +3,12 @@ var Note = function(code, key) {
     this.name = codeToName(code, key);
     this.key = key;
     this.octave = Math.floor(code / 12) - 1;
+    if (this.name === 'Cb') {
+        this.octave += 1;
+    }
+    if (this.name === 'B#') {
+        this.octave -= 1;
+    }
 };
 
 Note.prototype = {
@@ -44,8 +50,11 @@ Chord.prototype = {
         this.notes.forEach(function(note) {
             vexKeys.push(note.toVexString());
         });
+        var maxCode = Math.max.apply(Math, this.notes.map(function(n) {
+            return n.code;
+        }));
         return new Vex.Flow.StaveNote({
-            clef: this.notes[0].octave < 4 ? 'bass' : 'treble',
+            clef: maxCode < 60 ? 'bass' : 'treble',
             keys: vexKeys,
             duration: '4'
         });
@@ -184,7 +193,7 @@ function randomNote(cleff, key) {
 
 function scaleIndex(note, key) {
     var keyRootCode = rootNoteCode(key);
-    var diff = (note.code % 12) - keyRootCode;
+    var diff = ((11 - keyRootCode) + (note.code % 12) + 1) % 12;
     var index = -1;
     if (diff < 5) {
         if (diff % 2 === 0) {
@@ -213,17 +222,18 @@ function randomChord(clef, key) {
         chordIndices = [rootIndex + 2, rootIndex + 4, rootIndex + 6];
     }
 
-    var octave = chordRoot.octave;
+    var halfStepsFromRoot = rootIndex < 3 ? rootIndex * 2 : rootIndex * 2 - 1;
+    var scaleRootCode = chordRoot.code - halfStepsFromRoot;
     chordIndices.forEach(function(index) {
-        if (index > 6) {
-            if (octave === 4 || octave === 2) {
-                octave += 1;
-            }
-            index = index % 7;
-        }
-        var code = rootNoteCode(key);
+        var code = scaleRootCode;
+        var octaves = Math.floor(index / 7);
+        code += octaves * 12;
+        index = index % 7;
         code += index < 3 ? index * 2 : index * 2 - 1;
-        code = code % 12 + 12 * (octave + 1);
+        var octave = Math.floor(code / 12) - 1;
+        if ((clef === 'g' && octave > 5) || (clef === 'f' && octave > 3)) {
+            code -= 12;
+        }
         chordNotes.push(new Note(code, key));
     });
     return new Chord(chordNotes);
