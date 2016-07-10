@@ -21,6 +21,7 @@ function displaySavedSettings() {
         $('#selMode').val(settings.mode);
         $('#selKey').val(settings.key);
         $('#selClef').val(settings.clef);
+        $('#selAnn').val(settings.ann);
     }
 }
 
@@ -54,13 +55,13 @@ function setUpTheButton() {
         }
         if (startClick) {
             updateLocalSettings();
-            $('#game-menu').fadeOut(300, function() {
+            $('#game-menu').fadeOut(200, function() {
                 updateGame();
                 $('#game-board').show();
                 $(mainBtn).text('OPTIONS');
             });
         } else {
-            $('#game-board').fadeOut(300, function() {
+            $('#game-board').fadeOut(200, function() {
                 $('#game-menu').show();
                 $(mainBtn).text('START');
             });
@@ -109,6 +110,7 @@ function getOptions() {
     var selectedKey = $('#selKey').val();
     var selectedClef = $('#selClef').val();
     var selectedMode = $('#selMode').val();
+    var selectedAnn = $('#selAnn').val();
     var treble, bass;
     if (selectedClef === 'BOTH') {
         treble = bass = true;
@@ -124,7 +126,8 @@ function getOptions() {
         'key': selectedKey,
         'withTreble': treble,
         'withBass': bass,
-        'mode': selectedMode
+        'mode': selectedMode,
+        'ann': selectedAnn
     };
 }
 
@@ -132,7 +135,8 @@ function updateLocalSettings() {
     var settings = {
         mode: $('#selMode').val(),
         key: $('#selKey').val(),
-        clef: $('#selClef').val()
+        clef: $('#selClef').val(),
+        ann: $('#selAnn').val(),
     };
     localStorage.setItem('mahler-settings', JSON.stringify(settings));
 }

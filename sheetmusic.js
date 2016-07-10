@@ -13,6 +13,7 @@ SheetMusic.prototype.update = function(options) {
     this.trebleBars = new Queue();
     this.bassBars = new Queue();
     this.mode = options.mode;
+    this.ann = options.ann === 'ON' ? true : false;
     this._initializeBars();
 };
 
@@ -196,9 +197,20 @@ SheetMusic.prototype._drawBars = function(vexCtx) {
                 fill_style: 'black'
             });
             stave.setContext(vexCtx).draw();
-            var notes = bar.map(function(item) {
-                return item.toVexNote();
-            });
+            var notes = bar.map((function(item) {
+                var note = item.toVexNote();
+                if (!this.ann) {
+                    return note;
+                }
+                var name = item.toNoteList().reduce(function(prev, next) {
+                    return prev.code < next.code ? prev : next;
+                }, {code: 999}).toString();
+                var annVertJust = Vex.Flow.Annotation.VerticalJustify.BOTTOM;
+                var ann = new Vex.Flow.Annotation(name);
+                ann.setVerticalJustification(annVertJust);
+                note.addModifier(0, ann);
+                return note;
+            }).bind(this));
             Vex.Flow.Formatter.FormatAndDraw(vexCtx, stave, notes);
             ++i;
         }, this);
